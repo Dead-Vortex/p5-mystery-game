@@ -1,15 +1,25 @@
 //preview: python -m http.server
 
-let myBall;
+const BALL_COUNT = 5;
+
+let balls = [];
+let gravity = 1;
+
+let boundsWidth = 800;
 
 function setup() {
   createCanvas(windowWidth-100, windowHeight-100);
   background(30);
-  myBall = new Ball(width / 2, height / 2, 40);
+  for(let i = 0; i < BALL_COUNT; i++) {
+    balls.push(new Ball(width / 2, height / 3, 40));
+  }
 }
 
 function draw() {
   background(30);
+  fill("blue");
+  rect(width / 2 - boundsWidth / 2, 0, boundsWidth, height)
+
   myBall.update();   // Calculate physics
   myBall.checkKeys(); // Check for keyboard input
   myBall.display();    // Draw the ball
@@ -18,43 +28,46 @@ function draw() {
 class Ball {
   constructor(x, y, r) {
     this.pos = createVector(x, y);
-    this.vel = createVector(0, 0);
+    this.vel = createVector(random(-500, 500), random(-50, 50));
     this.acc = createVector(0, 0);
     this.r = r;
     this.topSpeed = 60;
-    this.friction = 0.99; 
   }
 
-  // Method to check keyboard input and apply forces
-  checkKeys() {
-    let forceMagnitude = 12;
-    
-    if (keyIsDown(LEFT_ARROW))  this.applyForce(createVector(-forceMagnitude, 0));
-    if (keyIsDown(RIGHT_ARROW)) this.applyForce(createVector(forceMagnitude, 0));
-    if (keyIsDown(UP_ARROW))    this.applyForce(createVector(0, -forceMagnitude));
-    if (keyIsDown(DOWN_ARROW))  this.applyForce(createVector(0, forceMagnitude));
-  }
-
-  // The "Force" pattern: Force adds to Acceleration
   applyForce(force) {
     this.acc.add(force);
   }
 
   update() {
-    // 1. Acceleration changes Velocity
     this.vel.add(this.acc);
-    
-    // 2. Limit the speed so it doesn't go infinite
+    this.vel.y += gravity;
     this.vel.limit(this.topSpeed);
-    
-    // 3. Velocity changes Position
     this.pos.add(this.vel);
-    
-    // 4. Apply friction (velocity decay)
-    this.vel.mult(this.friction);
-    
-    // 5. Reset acceleration for the next frame
-    this.acc.mult(0);
+
+    this.vel.x *= 0.99;
+    if(this.pos.y > height - this.r / 2) {
+      this.pos.y = height - this.r / 2;
+      this.vel.y *= -0.9;
+    }
+    if(this.pos.x > width / 2 + boundsWidth / 2 - this.r / 2) {
+      this.pos.x = width / 2 + boundsWidth / 2 - this.r / 2;
+      this.vel.x *= -0.9;
+    }
+    if(this.pos.x < width / 2 - boundsWidth / 2 + this.r / 2) {
+      this.pos.x = width / 2 - boundsWidth / 2 + this.r / 2;
+      this.vel.x *= -0.9;
+    }
+  }
+
+  checkKeys() {
+    if (keyIsDown(32)) {
+      if(this.vel.x < 0) {
+        this.vel.x -= 20;
+      } else {
+        this.vel.x += 20;
+      }
+      //this.vel.y -= 5;
+    }
   }
 
   display() {
@@ -63,3 +76,17 @@ class Ball {
     ellipse(this.pos.x, this.pos.y, this.r);
   }
 }
+
+// function keyPressed() {
+//   if (key === ' ') {
+//     console.log("Spacebar was just pressed!");
+//   }
+  
+//   if (key === 'w' || key === 'W') {
+//     console.log("The W key was just pressed!");
+//   }
+
+//   if (keyCode === UP_ARROW) {
+//     console.log("Up Arrow was just pressed!");
+//   }
+// }
